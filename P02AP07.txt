@@ -1,0 +1,396 @@
+000100 IDENTIFICATION DIVISION.                                         00010003
+000200 PROGRAM-ID. P02AP07.                                             00020004
+000300 DATA DIVISION.                                                   00030003
+000400 WORKING-STORAGE SECTION.                                         00040003
+000500 01  WS-VALID-FLAG    PIC X(01)       VALUE 'N'.                  00050003
+000600     88 VALID-DATA                    VALUE 'Y'.                  00060003
+000700 01  PARA-TABLE                      VALUE SPACES.                00070003
+000800     03 PARA-NAME PIC X(16) OCCURS 12 TIMES.                      00080003
+000900 01  PARA-SUB     PIC 9(02) VALUE ZERO.                           00090003
+001000 01  WS-CA.                                                       00100003
+001100     03  WS-PROCESS-FLAG   PIC X(01) VALUE SPACES.                00110003
+001200     88  PROCESS-KEY         VALUE '1'.                           00120003
+001300     88  PROCESS-ADD         VALUE '2'.                           00130003
+001400     88  PROCESS-UPD-DEL     VALUE '3'.                           00140003
+001500     88  PROCESS-DET         VALUE '2', '3'.                      00150003
+001600     03  WS-CUSTID PIC X(06) VALUE SPACES.                        00160003
+001700 01  WS-RESP-CODE  PIC S9(08) COMP VALUE ZERO.                    00170003
+001800 01  CUST-REC.                                                    00180003
+001900     03 CUST-ID    PIC 9(08)   VALUE ZERO.                        00190003
+002000     03 CUST-NAME  PIC X(20)   VALUE SPACES.                      00200003
+002100     03 CUST-DOB.                                                 00210003
+002200       05 CUST-YYYY PIC 9(04)  VALUE ZERO.                        00220003
+002300       05 CUST-MM  PIC 9(02)   VALUE ZERO.                        00230003
+002400       05 CUST-DD  PIC 9(02)   VALUE ZERO.                        00240003
+002500     03 CUST-MOB   PIC 9(10)   VALUE ZERO.                        00250003
+002600     03 CUST-ADDR  PIC X(20)   VALUE SPACES.                      00260003
+002700     03 CUST-ADHAR PIC 9(12)   VALUE ZERO.                        00270003
+002800     03 CUST-PAN   PIC X(10)   VALUE SPACES.                      00280003
+002900     03 ACC-BAL    PIC X(07).                                     00290004
+003000 01  WS-VARIABLES.                                                00300003
+003100     03 WS-A       PIC X(36)   VALUE                              00310003
+003200         'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.                  00320003
+003300     03 WS-B REDEFINES WS-A.                                      00330003
+003400        05 WS-C    PIC X(03) OCCURS 12 TIMES.                     00340003
+003500     03 WS-CUST-DOB.                                              00350003
+003600       05 CUST-DD  PIC X(02)   VALUE SPACES.                      00360003
+003700       05 FILLER   PIC X(01)   VALUE '-'.                         00370003
+003800       05 CUST-MMM PIC X(03)   VALUE SPACES.                      00380003
+003900       05 FILLER   PIC X(01)   VALUE '-'.                         00390003
+004000       05 CUST-YYYY PIC X(04)  VALUE SPACES.                      00400003
+004100 01  WS-MESSAGE  PIC X(30) VALUE                                  00410003
+004200      'END OF THE PROGRAM, BYE, BYE!!'.                           00420003
+004300      COPY P02AS07.                                               00430003
+004400      COPY DFHAID.                                                00440003
+004500      COPY DFHBMSCA.                                              00450003
+004600 LINKAGE SECTION.                                                 00460003
+004700 01  DFHCOMMAREA     PIC X(07).                                   00470003
+004800 PROCEDURE DIVISION.                                              00480003
+004900 MAIN-PARA.                                                       00490003
+005000      ADD 1 TO PARA-SUB                                           00500003
+005100      IF PARA-SUB < 13                                            00510003
+005200        MOVE 'MAIN-PARA       ' TO PARA-NAME(PARA-SUB)            00520003
+005300      END-IF                                                      00530003
+005400      IF EIBCALEN = ZERO                                          00540003
+005500          PERFORM FIRST-PARA                                      00550003
+005600      ELSE                                                        00560003
+005700       MOVE DFHCOMMAREA TO WS-CA                                  00570003
+005800          PERFORM NEXT-PARA  THRU X-PARA.                         00580003
+005900 END-PARA.                                                        00590003
+006000      ADD 1 TO PARA-SUB                                           00600003
+006100      IF PARA-SUB < 13                                            00610003
+006200        MOVE 'END-PARA        ' TO PARA-NAME(PARA-SUB)            00620003
+006300      END-IF                                                      00630003
+006400      EXEC CICS RETURN                                            00640003
+006500          TRANSID('P02G')                                         00650003
+006600          COMMAREA(WS-CA)                                         00660003
+006700      END-EXEC.                                                   00670003
+006800 FIRST-PARA.                                                      00680003
+006900      ADD 1 TO PARA-SUB                                           00690003
+007000      IF PARA-SUB < 13                                            00700003
+007100        MOVE 'FIRST-PARA      ' TO PARA-NAME(PARA-SUB)            00710003
+007200      END-IF                                                      00720003
+007300     MOVE LOW-VALUES TO ADMMAPO                                   00730003
+007400     PERFORM SEND-MAP.                                            00740003
+007500 SEND-MAP.                                                        00750003
+007600      ADD 1 TO PARA-SUB                                           00760003
+007700      IF PARA-SUB < 13                                            00770003
+007800        MOVE 'SEND-MAP        ' TO PARA-NAME(PARA-SUB)            00780003
+007900      END-IF                                                      00790003
+008000      EXEC CICS SEND                                              00800003
+008100          MAP('ADMMAP')                                           00810003
+008200          MAPSET('P02AS07')                                       00820003
+008300          FROM (ADMMAPO)                                          00830003
+008400          ERASE                                                   00840003
+008500      END-EXEC                                                    00850003
+008600     SET PROCESS-KEY TO TRUE.                                     00860003
+008700 NEXT-PARA.                                                       00870003
+008800      ADD 1 TO PARA-SUB                                           00880003
+008900      IF PARA-SUB < 13                                            00890003
+009000        MOVE 'NEXT-PARA       ' TO PARA-NAME(PARA-SUB)            00900003
+009100      END-IF                                                      00910003
+009200      EVALUATE TRUE                                               00920003
+009300          WHEN PROCESS-KEY                                        00930003
+009400            PERFORM KEYMAP-PARA                                   00940003
+009500          WHEN PROCESS-DET                                        00950003
+009600            PERFORM DETMAP-PARA                                   00960003
+009700      END-EVALUATE.                                               00970003
+009800 SEND-PARA.                                                       00980003
+009900      ADD 1 TO PARA-SUB                                           00990003
+010000      IF PARA-SUB < 13                                            01000003
+010100        MOVE 'SEND-PARA       ' TO PARA-NAME(PARA-SUB)            01010003
+010200      END-IF                                                      01020003
+010300      EVALUATE TRUE                                               01030003
+010400         WHEN PROCESS-KEY                                         01040003
+010500            EXEC CICS SEND                                        01050003
+010600              MAP('ADMMAP')                                       01060003
+010700              MAPSET('P02AS07')                                   01070003
+010800              CURSOR                                              01080003
+010900              ERASE                                               01090003
+011000            END-EXEC                                              01100003
+011100         WHEN PROCESS-DET                                         01110003
+011200            EXEC CICS SEND                                        01120003
+011300              MAP('CUSTMAP')                                      01130003
+011400              MAPSET('P02AS07')                                   01140003
+011500              CURSOR                                              01150003
+011600              ERASE                                               01160003
+011700            END-EXEC                                              01170003
+011800       END-EVALUATE.                                              01180003
+011900 X-PARA.                                                          01190003
+012000      EXIT.                                                       01200003
+012100 KEYMAP-PARA.                                                     01210003
+012200      ADD 1 TO PARA-SUB                                           01220003
+012300      IF PARA-SUB < 13                                            01230003
+012400        MOVE 'KEYMAP-PARA     ' TO PARA-NAME(PARA-SUB)            01240003
+012500      END-IF                                                      01250003
+012600       EVALUATE EIBAID                                            01260003
+012700         WHEN DFHENTER                                            01270003
+012800           PERFORM KEY-PROCESS-PARA                               01280003
+012900         WHEN DFHPF3                                              01290003
+013000           EXEC CICS XCTL                                         01300003
+013100             PROGRAM('P21AP07')                                   01310003
+013200           END-EXEC                                               01320003
+013300         WHEN OTHER                                               01330003
+013400           MOVE 'INVALID KEY PRESSED' TO MESSAGE1O                01340003
+013500       END-EVALUATE.                                              01350003
+013600 KEY-PROCESS-PARA.                                                01360003
+013700      ADD 1 TO PARA-SUB                                           01370003
+013800      IF PARA-SUB < 13                                            01380003
+013900        MOVE 'KEY-PROCESS-PARA' TO PARA-NAME(PARA-SUB)            01390003
+014000      END-IF                                                      01400003
+014100      PERFORM RECEIVE-MAP                                         01410003
+014200        IF                                                        01420003
+014300           CUSTIDL = ZERO OR CUSTIDI = SPACES OR ZERO             01430003
+014400           MOVE 'PLEASE ENTER CUSTLOYEE-ID' TO MESSAGE1O          01440003
+014500        ELSE                                                      01450003
+014600*        MOVE  CUSTIDI TO WS-CUSTID                               01460004
+014700           MOVE LOW-VALUES TO CUSTMAPO                            01470005
+014800           MOVE -1 TO CUSTIDL                                     01480005
+014900           SET PROCESS-DET TO TRUE.                               01490005
+015000 READ-MASTER.                                                     01500003
+015100      ADD 1 TO PARA-SUB                                           01510003
+015200      IF PARA-SUB < 13                                            01520003
+015300        MOVE 'READ-MASTER     ' TO PARA-NAME(PARA-SUB)            01530003
+015400      END-IF                                                      01540003
+015500*      MOVE WS-CUSTID TO CUST-ID                                  01550004
+015600       EXEC CICS READ                                             01560003
+015700           FILE('P21DFILE')                                       01570003
+015800           RIDFLD(CUST-ID)                                        01580003
+015900           INTO(CUST-REC)                                         01590003
+016000           RESP(WS-RESP-CODE)                                     01600003
+016100       END-EXEC                                                   01610003
+016200      PERFORM TRANSFER-PARA.                                      01620003
+016300 TRANSFER-PARA.                                                   01630003
+016400      ADD 1 TO PARA-SUB                                           01640003
+016500      IF PARA-SUB < 13                                            01650003
+016600        MOVE 'TRANSFER-PARA   ' TO PARA-NAME(PARA-SUB)            01660003
+016700      END-IF                                                      01670003
+016800      MOVE LOW-VALUES TO CUSTMAPO                                 01680003
+016900      EVALUATE WS-RESP-CODE                                       01690003
+017000         WHEN DFHRESP(NORMAL)                                     01700003
+017100           PERFORM MOVE-PARA                                      01710003
+017200           SET PROCESS-UPD-DEL TO TRUE                            01720003
+017300           MOVE DFHBMDAR TO ENTERA, PF2A                          01730003
+017400*          MOVE DFHBMPRO TO  CUSTID2A                             01740003
+017500*          MOVE WS-CUSTID TO LCUSTID2I                            01750003
+017600           MOVE 'MAKE CHANGES & PRESS PF4 TO UPDATE' TO MESSAGE2O 01760003
+017700         WHEN DFHRESP(NOTFND)                                     01770003
+017800*          MOVE WS-CUSTID TO LCUSTID2I                            01780003
+017900           MOVE SPACES TO CUSTIDO, CNAMEO, CDOBO, CMOBO,          01790004
+018000                          AADRO, ADHARO, PANNOO                   01800004
+018100           MOVE DFHBMDAR TO ENTERA, PF4A, PF5A                    01810003
+018200           SET PROCESS-ADD TO TRUE                                01820003
+018300         WHEN OTHER                                               01830003
+018400           MOVE 'ERROR ACCCESING FILE' TO MESSAGE2O               01840003
+018500       END-EVALUATE.                                              01850004
+018600 MOVE-PARA.                                                       01860003
+018700      ADD 1 TO PARA-SUB                                           01870003
+018800      IF PARA-SUB < 13                                            01880003
+018900        MOVE 'MOVE-PARA       ' TO PARA-NAME(PARA-SUB)            01890003
+019000      END-IF                                                      01900003
+019100     MOVE CUST-ID  TO CUSTIDO                                     01910003
+019200     MOVE CUST-NAME TO CNAMEO                                     01920003
+019300     MOVE CORRESPONDING CUST-DOB TO WS-CUST-DOB                   01930003
+019400     MOVE CUST-DOB(1:4) TO WS-CUST-DOB(8:4)                       01940003
+019500     MOVE CUST-DOB(7:2) TO WS-CUST-DOB(1:2)                       01950003
+019600     MOVE WS-C(CUST-MM) TO CUST-MMM                               01960003
+019700     MOVE WS-CUST-DOB TO CDOBO                                    01970003
+019800     MOVE CUST-ADDR TO AADRO                                      01980003
+019900     MOVE CUST-ADHAR TO ADHARO                                    01990003
+020000     MOVE CUST-PAN  TO PANNOO                                     02000004
+020100     MOVE ACC-BAL TO ACCBALO.                                     02010004
+020200 DETMAP-PARA.                                                     02020003
+020300      ADD 1 TO PARA-SUB                                           02030003
+020400      IF PARA-SUB < 13                                            02040003
+020500        MOVE 'DETMAP-PARA     ' TO PARA-NAME(PARA-SUB)            02050003
+020600      END-IF                                                      02060003
+020700     EVALUATE EIBAID                                              02070003
+020800        WHEN DFHPF2                                               02080003
+020900           IF PROCESS-ADD                                         02090003
+021000             PERFORM ADD-PARA                                     02100003
+021100           ELSE                                                   02110003
+021200             MOVE 'ADD IS NOT ENABLED' TO MESSAGE2O               02120003
+021300           END-IF                                                 02130003
+021400        WHEN DFHPF3                                               02140003
+021500           MOVE LOW-VALUES TO ADMMAPO                             02150004
+021600           SET PROCESS-KEY TO TRUE                                02160003
+021700        WHEN DFHPF4                                               02170003
+021800           IF PROCESS-UPD-DEL                                     02180003
+021900             PERFORM UPDATE-PARA                                  02190003
+022000           ELSE                                                   02200003
+022100             MOVE 'UPDATE IS NOT ENABLED' TO MESSAGE2O            02210003
+022200           END-IF                                                 02220003
+022300        WHEN DFHPF5                                               02230003
+022400           IF PROCESS-UPD-DEL                                     02240003
+022500             PERFORM DELETE-PARA                                  02250003
+022600           ELSE                                                   02260003
+022700             MOVE 'DELETE IS NOT ENABLED' TO MESSAGE2O            02270003
+022800           END-IF                                                 02280003
+022900        WHEN OTHER                                                02290003
+023000           MOVE 'INVAKLID KEY PRESSED' TO MESSAGE2O               02300003
+023100     END-EVALUATE.                                                02310003
+023200 RECEIVE-MAP.                                                     02320003
+023300      ADD 1 TO PARA-SUB                                           02330003
+023400      IF PARA-SUB < 13                                            02340003
+023500        MOVE 'RECEIVE-MAP     ' TO PARA-NAME(PARA-SUB)            02350003
+023600      END-IF                                                      02360003
+023700      EXEC CICS RECEIVE                                           02370003
+023800          MAP('ADMMAP')                                           02380003
+023900          MAPSET('P02AS07')                                       02390003
+024000          INTO(ADMMAPI)                                           02400003
+024100          RESP(WS-RESP-CODE)                                      02410005
+024200      END-EXEC.                                                   02420003
+024300 RECEIVE-DETMAP.                                                  02430003
+024400      ADD 1 TO PARA-SUB                                           02440003
+024500      IF PARA-SUB < 13                                            02450003
+024600        MOVE 'RECEIVE-DETMAP  ' TO PARA-NAME(PARA-SUB)            02460003
+024700      END-IF                                                      02470003
+024800      EXEC CICS RECEIVE                                           02480003
+024900          MAP('CUSTMAP')                                          02490003
+025000          MAPSET('P02AS07')                                       02500003
+025100          INTO(CUSTMAPI)                                          02510003
+025200      END-EXEC.                                                   02520003
+025300 ADD-PARA.                                                        02530003
+025400      ADD 1 TO PARA-SUB                                           02540003
+025500      IF PARA-SUB < 13                                            02550003
+025600        MOVE 'ADD-PARA        ' TO PARA-NAME(PARA-SUB)            02560003
+025700      END-IF                                                      02570003
+025800       PERFORM RECEIVE-DETMAP                                     02580003
+025900       PERFORM CHECK-PARA                                         02590003
+026000      IF VALID-DATA                                               02600003
+026100       PERFORM MOVE-PARA2                                         02610003
+026200       PERFORM WRITE-PARA.                                        02620003
+026300 WRITE-PARA.                                                      02630003
+026400      ADD 1 TO PARA-SUB                                           02640003
+026500      IF PARA-SUB < 13                                            02650003
+026600        MOVE 'WRITE-PARA      ' TO PARA-NAME(PARA-SUB)            02660003
+026700      END-IF                                                      02670003
+026800*     MOVE WS-CUSTID TO CUST-ID                                   02680003
+026900      EXEC CICS WRITE                                             02690003
+027000          FILE('P21DFILE')                                        02700003
+027100          RIDFLD(CUST-ID)                                         02710003
+027200          FROM(CUST-REC)                                          02720003
+027300          RESP(WS-RESP-CODE)                                      02730003
+027400      END-EXEC.                                                   02740003
+027500      EVALUATE WS-RESP-CODE                                       02750003
+027600        WHEN DFHRESP(NORMAL)                                      02760003
+027700          MOVE LOW-VALUES TO ADMMAPO                              02770003
+027800          MOVE 'CUSTLOYEE ADDED SUCCESSFULLY' TO MESSAGE1O        02780003
+027900        WHEN OTHER                                                02790003
+028000          MOVE LOW-VALUES TO ADMMAPO                              02800003
+028100          MOVE 'ERROR ADDING CUSTLOYEE' TO MESSAGE1O              02810003
+028200      END-EVALUATE.                                               02820003
+028300*     MOVE CUST-ID TO CUSTIDO                                     02830004
+028400      SET PROCESS-KEY TO TRUE.                                    02840003
+028500 DELETE-PARA.                                                     02850003
+028600      ADD 1 TO PARA-SUB                                           02860003
+028700      IF PARA-SUB < 13                                            02870003
+028800        MOVE 'DELETE-PARA     ' TO PARA-NAME(PARA-SUB)            02880003
+028900      END-IF                                                      02890003
+029000      MOVE WS-CUSTID TO CUST-ID                                   02900003
+029100      EXEC CICS DELETE                                            02910003
+029200          FILE('P21DFILE')                                        02920003
+029300          RIDFLD(CUST-ID)                                         02930003
+029400          RESP(WS-RESP-CODE)                                      02940003
+029500      END-EXEC                                                    02950003
+029600      EVALUATE WS-RESP-CODE                                       02960003
+029700         WHEN DFHRESP(NORMAL)                                     02970003
+029800           MOVE LOW-VALUES TO ADMMAPO                             02980003
+029900           MOVE 'CUSTOMER RECORD IS DELETED' TO MESSAGE1O         02990003
+030000         WHEN OTHER                                               03000003
+030100           MOVE LOW-VALUES TO ADMMAPO                             03010003
+030200           MOVE 'ERROR DELETING CUSTOMER ' TO MESSAGE1O           03020003
+030300      END-EVALUATE                                                03030003
+030400      SET PROCESS-KEY TO TRUE.                                    03040004
+030500*     MOVE WS-CUSTID TO  CUSTIDO.                                 03050003
+030600 UPDATE-PARA.                                                     03060003
+030700      ADD 1 TO PARA-SUB                                           03070003
+030800      IF PARA-SUB < 13                                            03080003
+030900        MOVE 'UPDATE-PARA     ' TO PARA-NAME(PARA-SUB)            03090003
+031000      END-IF                                                      03100003
+031100      PERFORM RECEIVE-DETMAP                                      03110003
+031200      PERFORM CHECK-PARA                                          03120003
+031300      IF VALID-DATA                                               03130003
+031400       PERFORM REWRITE-PARA                                       03140003
+031500      END-IF.                                                     03150003
+031600 REWRITE-PARA.                                                    03160003
+031700      ADD 1 TO PARA-SUB                                           03170003
+031800      IF PARA-SUB < 13                                            03180003
+031900        MOVE 'REWRITE-PARA    ' TO PARA-NAME(PARA-SUB)            03190003
+032000      END-IF                                                      03200003
+032100*     MOVE WS-CUSTID TO CUST-ID                                   03210003
+032200      EXEC CICS READ                                              03220003
+032300          FILE('P21DFILE')                                        03230003
+032400          RIDFLD(CUST-ID)                                         03240003
+032500           INTO(CUST-REC)                                         03250003
+032600           UPDATE                                                 03260003
+032700           RESP(WS-RESP-CODE)                                     03270003
+032800       END-EXEC                                                   03280003
+032900       EVALUATE WS-RESP-CODE                                      03290003
+033000        WHEN DFHRESP(NORMAL)                                      03300003
+033100           PERFORM MOVE-PARA2                                     03310003
+033200           EXEC CICS REWRITE                                      03320003
+033300              FILE('P21DFILE')                                    03330003
+033400              FROM(CUST-REC)                                      03340003
+033500              RESP(WS-RESP-CODE)                                  03350003
+033600           END-EXEC                                               03360003
+033700        WHEN OTHER                                                03370003
+033800             EXEC CICS UNLOCK                                     03380003
+033900               FILE('P21DFILE')                                   03390003
+034000             END-EXEC                                             03400003
+034100         MOVE 'PROBLEM ACCESSING FILE' TO MESSAGE1O               03410003
+034200       END-EVALUATE                                               03420003
+034300       EVALUATE WS-RESP-CODE                                      03430003
+034400         WHEN DFHRESP(NORMAL)                                     03440003
+034500           MOVE LOW-VALUES TO ADMMAPO                             03450003
+034600           MOVE 'DETAILS UPDATED' TO MESSAGE1O                    03460003
+034700         WHEN DFHRESP(INVREQ)                                     03470003
+034800           MOVE LOW-VALUES TO ADMMAPO                             03480003
+034900           MOVE 'INVALID REQUEST' TO MESSAGE1O                    03490003
+035000         WHEN OTHER                                               03500003
+035100           MOVE LOW-VALUES TO ADMMAPO                             03510003
+035200           MOVE 'ERROR OCCURED' TO MESSAGE1O                      03520003
+035300       END-EVALUATE                                               03530003
+035400       SET PROCESS-KEY TO TRUE.                                   03540004
+035500*      MOVE WS-CUSTID TO  CUSTIDO.                                03550003
+035600 MOVE-PARA2.                                                      03560003
+035700      ADD 1 TO PARA-SUB                                           03570003
+035800      IF PARA-SUB < 13                                            03580003
+035900        MOVE 'MOVE-PARA2      ' TO PARA-NAME(PARA-SUB)            03590003
+036000      END-IF                                                      03600003
+036100     MOVE CUSTIDI TO CUST-ID                                      03610003
+036200     MOVE CNAMEI  TO CUST-NAME                                    03620003
+036300     MOVE CDOBI   TO  CUST-DOB                                    03630003
+036400     MOVE CMOBI   TO CUST-MOB                                     03640003
+036500     MOVE AADRI   TO CUST-ADDR                                    03650003
+036600     MOVE ADHARI  TO CUST-ADHAR                                   03660003
+036700     MOVE PANNOI  TO CUST-PAN                                     03670003
+036800     MOVE ACCBALI TO ACC-BAL.                                     03680003
+036900 CHECK-PARA.                                                      03690003
+037000      ADD 1 TO PARA-SUB                                           03700003
+037100      IF PARA-SUB < 13                                            03710003
+037200        MOVE 'CHECK-PARA      ' TO PARA-NAME(PARA-SUB)            03720003
+037300      END-IF                                                      03730003
+037400     IF CNAMEI IS NUMERIC OR                                      03740003
+037500        CNAMEI = SPACES   OR                                      03750003
+037600        CNAMEL = ZERO                                             03760003
+037700        MOVE LOW-VALUES TO CUSTMAPO                               03770003
+037800*       MOVE WS-CUSTID TO LCUSTID2O                               03780003
+037900        MOVE -1 TO CNAMEL                                         03790003
+038000        MOVE DFHBMDAR TO ENTERA, PF2A                             03800003
+038100        MOVE 'NAME CAN NOT BE NUMERIC OR SPACES' TO MESSAGE2O     03810003
+038200     ELSE                                                         03820003
+038300       IF                                                         03830003
+038400                 CDOBI IS NOT NUMERIC OR                          03840003
+038500                 CDOBI = SPACES                                   03850003
+038600                MOVE LOW-VALUES TO CUSTMAPO                       03860003
+038700                MOVE -1 TO CDOBL                                  03870003
+038800*               MOVE WS-CUSTID TO LCUSTID2O                       03880003
+038900                MOVE DFHBMDAR TO ENTERA, PF2A                     03890003
+039000                MOVE                                              03900003
+039100                'PLZ GIVE NUMERIC FIELD IN DOB FORMAT YYYYMMDD'   03910003
+039200                              TO MESSAGE2O                        03920003
+039300               ELSE                                               03930003
+039400                MOVE 'Y' TO WS-VALID-FLAG                         03940003
+039500       END-IF                                                     03950003
+039600      END-IF.                                                     03960003
